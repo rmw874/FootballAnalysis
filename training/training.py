@@ -1,4 +1,3 @@
-import shutil
 import subprocess
 from roboflow import Roboflow
 import os
@@ -10,12 +9,5 @@ project = rf.workspace("roboflow-jvuqo").project("football-players-detection-3zv
 version = project.version(1)
 dataset = version.download("yolov8")
 
-# def move_to_subfolder(dst):
-#     shutil.move("football-players-detection-1/"+ dst, "football-players-detection-1/football-players-detection-1/"+ dst)
-
-# move_to_subfolder("train")
-# move_to_subfolder("test")
-# move_to_subfolder("valid")
-
-train_command = f"yolo task=detect model=yolov8m.pt data={dataset.location}/data.yaml epochs=25 imgsz=640 device=cuda"
+train_command = f"yolo task=detect model=25epochs_weights.pt data={dataset.location}/data.yaml epochs=25 imgsz=640 device=cuda"
 subprocess.run(train_command, shell=True)
