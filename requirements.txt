@@ -1,2 +1,5 @@
 ultralytics
 roboflow
+opencv-python
+pickle
+supervision
