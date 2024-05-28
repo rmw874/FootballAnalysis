@@ -1,8 +1,9 @@
-from ultralytics import YOLO
 import supervision as sv
+import numpy as np
 import pickle
 import os
 import cv2
+from ultralytics import YOLO
 from .bbox_tools import get_bbox_center, get_bbox_width
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
@@ -82,6 +83,8 @@ class Tracker:
 
         return tracks
     
+
+    #TODO: Change ellipse to triangle maybe
     def draw_ellipse(self, frame, bbox, color, track_id=None, player=False):
         y2 = int(bbox[3])
         x_center, _ = get_bbox_center(bbox)
@@ -100,7 +103,7 @@ class Tracker:
             )
         
         if player:
-            rectangle_color = color
+            #rectangle_color = color
             rectangle_width = 80
             rectangle_height = 20
             x1_rect = x_center - rectangle_width//2
@@ -130,6 +133,20 @@ class Tracker:
 
         return frame
 
+    def draw_triangle(self, frame, bbox, color):
+        y = int(bbox[1])
+        x_center, _ = get_bbox_center(bbox)
+
+        triangle_points = np.array([
+            [x_center, y],
+            [x_center - 10, y - 20],
+            [x_center + 10, y - 20]
+        ])
+        cv2.drawContours(frame, [triangle_points], 0, color, -1) # -1 means fill the triangle
+        cv2.polylines(frame, [triangle_points], isClosed=True, color=(0, 0, 0), thickness=2)
+
+        return frame
+
     def draw_annots(self, frames, tracks):
         output_frames = []
         for frame_index, frame in enumerate(frames):
@@ -138,11 +155,18 @@ class Tracker:
             ball_dict = tracks["ball"][frame_index]
             referee_dict = tracks["referees"][frame_index]
 
+            # draw player
             for track_id, player in player_dict.items():
-                frame = self.draw_ellipse(frame, player["bbox"], (255, 0, 0), track_id, player=True)
+                color = player.get("team_color", (255, 255, 255)) #get team color if available
+                frame = self.draw_ellipse(frame, player["bbox"], color, track_id, player=True)
 
+            # draw referee
             for _, referee in referee_dict.items():
-                frame = self.draw_ellipse(frame, referee["bbox"], (255, 255, 255))
+                frame = self.draw_ellipse(frame, referee["bbox"], (128, 128, 128))
+
+            # draw ball
+            for _, ball in ball_dict.items():
+                frame = self.draw_triangle(frame, ball["bbox"], (255, 255, 255))
 
             output_frames.append(frame)
 
